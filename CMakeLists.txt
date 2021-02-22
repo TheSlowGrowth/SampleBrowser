@@ -17,6 +17,9 @@ cmake_minimum_required(VERSION 3.12)
 
 project(SAMPLE_BROWSER VERSION 0.0.1)
 
+# Set c++17
+set(CMAKE_CXX_STANDARD 17)
+
 # If you've installed JUCE somehow (via a package manager, or directly using the CMake install
 # target), you'll need to tell this project that it depends on the installed copy of JUCE. If you've
 # included JUCE directly in your source tree (perhaps as a submodule), you'll need to tell CMake to
@@ -93,3 +96,21 @@ target_link_libraries(SampleBrowser
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
+
+# find thread library
+find_package(Threads)
+
+# include googletest directories
+include_directories(
+    googletest/googletest/include
+    googletest/googletest)
+
+# This target adds a googletest executable
+add_executable (GtestConsoleApp
+    googletest/googletest/src/gtest-all.cc
+    googletest/googletest/src/gtest_main.cc
+    Tests/exampleTest_gtest.cpp)
+
+# link thread library
+target_link_libraries(GtestConsoleApp 
+    ${CMAKE_THREAD_LIBS_INIT})

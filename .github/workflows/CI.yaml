@@ -29,10 +29,20 @@ jobs:
       run: |
         cmake --build build --config Release
 
+    - name: Run Tests
+      run: |
+        build\Release\GtestConsoleApp.exe --gtest_output=xml:TestResults\gtestresults_windows.xml
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v2
+      with:
+        name: TestResults
+        path: TestResults/**
+
     - name: Upload executable
       uses: actions/upload-artifact@v2
       with:
-        name: SampleBrowser.exe
+        name: SampleBrowser_Windows
         path: build\SampleBrowser_artefacts\Release\SampleBrowser.exe
 
   ###############################################################################
@@ -57,16 +67,26 @@ jobs:
 
     - name: Configure
       run: |
-        cmake -G "Xcode" -B build
+        cmake -G "Xcode" -B build -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
 
     - name: Build
       run: |
         cmake --build build --config Release
 
+    - name: Run Tests
+      run: |
+        build/Release/GtestConsoleApp --gtest_output=xml:TestResults/gtestresults_macos.xml
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v2
+      with:
+        name: TestResults
+        path: TestResults/**
+
     - name: Upload executable
       uses: actions/upload-artifact@v2
       with:
-        name: SampleBrowser.app
+        name: SampleBrowser_MacOS
         path: build/SampleBrowser_artefacts/Release/SampleBrowser.app/**
 
   ###############################################################################
@@ -97,11 +117,44 @@ jobs:
       run: |
         cmake --build build --config Release
 
+    - name: Run Tests
+      run: |
+        build/GtestConsoleApp --gtest_output=xml:TestResults/gtestresults_ubuntu.xml
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v2
+      with:
+        name: TestResults
+        path: TestResults/**
+
     - name: Upload executable
       uses: actions/upload-artifact@v2
       with:
-        name: SampleBrowser
+        name: SampleBrowser_Linux
         path: build/SampleBrowser_artefacts/SampleBrowser
+
+  ###############################################################################
+  # uploads test results from the previous jobs
+  publishTestResults:
+    name: "Publish Unit Tests Results"
+    needs: [testBuildUbuntu, testBuildMacOS, testBuildWindows]
+    runs-on: ubuntu-latest
+    # the dependency jobs might be skipped, we don't need to run this job then
+    if: success() || failure()
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: TestResults
+          path: TestResults
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          files: TestResults/**/*.xml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
   
   ###############################################################################
   # builds the automated tests with clang; runs tests and exports results
