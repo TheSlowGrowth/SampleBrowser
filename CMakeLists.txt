@@ -53,10 +53,12 @@ juce_generate_juce_header(SampleBrowser)
 # Finally, we supply a list of source files that will be built into the target. This is a standard
 # CMake command.
 
+include_directories(Application)
+
 target_sources(SampleBrowser
     PRIVATE
-        Main.cpp
-        MainComponent.cpp)
+        Application/Main.cpp
+        Application/MainComponent.cpp)
 
 # `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer
 # project, these might be passed in the 'Preprocessor Definitions' field. JUCE modules also make use
