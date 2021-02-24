@@ -55,10 +55,36 @@ juce_generate_juce_header(SampleBrowser)
 
 include_directories(Application)
 
+set(
+    app_source_list
+
+    Application/MainComponent.h
+    Application/MainComponent.cpp
+
+    Application/Scanner/Scanner.cpp
+    Application/Scanner/Scanner.h
+    Application/Scanner/ScannerImpl.cpp
+    Application/Scanner/ScannerImpl.h
+    Application/Scanner/FeatureExtractor.h
+    Application/Scanner/STFT.cpp
+    Application/Scanner/STFT.h
+
+    Application/Scanner/FeatureExtractors/AttackTimeExtractor.h
+    Application/Scanner/FeatureExtractors/AttackTimeExtractor.cpp
+    Application/Scanner/FeatureExtractors/ReleaseTimeExtractor.h
+    Application/Scanner/FeatureExtractors/ReleaseTimeExtractor.cpp
+)
+
 target_sources(SampleBrowser
     PRIVATE
         Application/Main.cpp
-        Application/MainComponent.cpp)
+        ${app_source_list})
+
+foreach(source IN LISTS app_source_list)
+    get_filename_component(source_path "${source}" PATH)
+    string(REPLACE "/" "\\" source_path_msvc "${source_path}")
+    source_group("${source_path_msvc}" FILES "${source}")
+endforeach()
 
 # `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer
 # project, these might be passed in the 'Preprocessor Definitions' field. JUCE modules also make use
@@ -106,6 +132,10 @@ target_link_libraries(SampleBrowser
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
 
+###################################################################################################
+## Googletest console application 
+###################################################################################################
+
 # find thread library
 find_package(Threads)
 
@@ -114,12 +144,52 @@ include_directories(
     googletest/googletest/include
     googletest/googletest)
 
+set(
+    test_source_list
+        
+    Tests/Scanner/FeatureExtractors/AttackTimeExtractor_gtest.cpp
+    Tests/Scanner/FeatureExtractors/ReleaseTimeExtractor_gtest.cpp
+)
+
 # This target adds a googletest executable
-add_executable (GtestConsoleApp
-    googletest/googletest/src/gtest-all.cc
-    googletest/googletest/src/gtest_main.cc
-    Tests/exampleTest_gtest.cpp)
+juce_add_console_app(SampleBrowser_Gtest
+    PRIVATE
+        # JUCE_WEB_BROWSER and JUCE_USE_CURL would be on by default, but you might not need them.
+        JUCE_WEB_BROWSER=0  # If you remove this, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_gui_app` call
+        JUCE_USE_CURL=0     # If you remove this, add `NEEDS_CURL TRUE` to the `juce_add_gui_app` call
+        JUCE_DISPLAY_SPLASH_SCREEN=0
+        JUCE_REPORT_APP_USAGE=0
+        JUCE_QUICKTIME=0
+        JUCE_USE_DIRECTWRITE=1
+        JUCE_CATCH_UNHANDLED_EXCEPTIONS=0
+        JUCE_WIN_PER_MONITOR_DPI_AWARE=1
+        JUCE_USE_FLAC=1
+        JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:SampleBrowser_Gtest,JUCE_PRODUCT_NAME>"
+        JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:SampleBrowser_Gtest,JUCE_VERSION>")
+
+juce_generate_juce_header(SampleBrowser_Gtest)
+        
+target_sources(SampleBrowser_Gtest
+    PRIVATE
+        ${app_source_list}
+        ${test_source_list}
+        googletest/googletest/src/gtest-all.cc
+        googletest/googletest/src/gtest_main.cc)
+
+foreach(source IN LISTS test_source_list)
+    get_filename_component(source_path "${source}" PATH)
+    string(REPLACE "/" "\\" source_path_msvc "${source_path}")
+    source_group("${source_path_msvc}" FILES "${source}")
+endforeach()
 
 # link thread library
-target_link_libraries(GtestConsoleApp 
-    ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(SampleBrowser_Gtest 
+    ${CMAKE_THREAD_LIBS_INIT}
+    PRIVATE
+        # GuiAppData            # If we'd created a binary data target, we'd link to it here
+        juce::juce_gui_extra
+    PUBLIC
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_lto_flags
+        juce::juce_recommended_warning_flags
+    )

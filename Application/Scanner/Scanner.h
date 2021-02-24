@@ -1,3 +1,4 @@
+#pragma once
 #include "JuceHeader.h"
 
 class Scanner
@@ -8,7 +9,7 @@ public:
         File filePath;
         double lengthInSeconds;
         double sampleRate;
-        struct Properties 
+        struct Features 
         {
             double percussiveness;
             double colour;
