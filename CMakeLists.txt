@@ -48,11 +48,6 @@ juce_add_gui_app(SampleBrowser
 
 juce_generate_juce_header(SampleBrowser)
 
-# `target_sources` adds source files to a target. We pass the target that needs the sources as the
-# first argument, then a visibility parameter for the sources which should normally be PRIVATE.
-# Finally, we supply a list of source files that will be built into the target. This is a standard
-# CMake command.
-
 include_directories(Application)
 
 set(
@@ -60,12 +55,14 @@ set(
 
     Application/MainComponent.h
     Application/MainComponent.cpp
-
+    
+    Application/Scanner/AmplitudeEnvelope.h
+    Application/Scanner/AmplitudeEnvelope.cpp
+    Application/Scanner/FeatureExtractor.h
     Application/Scanner/Scanner.cpp
     Application/Scanner/Scanner.h
     Application/Scanner/ScannerImpl.cpp
     Application/Scanner/ScannerImpl.h
-    Application/Scanner/FeatureExtractor.h
     Application/Scanner/STFT.cpp
     Application/Scanner/STFT.h
 
@@ -108,6 +105,8 @@ target_compile_definitions(SampleBrowser
         JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:SampleBrowser,JUCE_PRODUCT_NAME>"
         JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:SampleBrowser,JUCE_VERSION>")
 
+#juce_add_modules("JUCE/modules/juce_dsp")
+
 # If your target needs extra binary assets, you can add them here. The first argument is the name of
 # a new static library target that will include all the binary resources. There is an optional
 # `NAMESPACE` argument that can specify the namespace of the generated binary data class. Finally,
@@ -127,6 +126,7 @@ target_link_libraries(SampleBrowser
     PRIVATE
         # GuiAppData            # If we'd created a binary data target, we'd link to it here
         juce::juce_gui_extra
+        juce::juce_dsp
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
@@ -146,7 +146,9 @@ include_directories(
 
 set(
     test_source_list
-        
+
+    Tests/Scanner/AmplitudeEnvelope_gtest.cpp
+    
     Tests/Scanner/FeatureExtractors/AttackTimeExtractor_gtest.cpp
     Tests/Scanner/FeatureExtractors/ReleaseTimeExtractor_gtest.cpp
 )
@@ -188,6 +190,7 @@ target_link_libraries(SampleBrowser_Gtest
     PRIVATE
         # GuiAppData            # If we'd created a binary data target, we'd link to it here
         juce::juce_gui_extra
+        juce::juce_dsp
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
